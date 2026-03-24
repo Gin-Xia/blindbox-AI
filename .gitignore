@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Env
+.env
+backend/.env
+
+# Node
+node_modules/
+frontend/dist/
+
+# Generated files (keep .gitkeep)
+backend/uploads/*
+backend/outputs/*
+!backend/uploads/.gitkeep
+!backend/outputs/.gitkeep
+
+# Model cache
+model_cache/
+*.onnx
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

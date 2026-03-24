@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Frontend (Vite)",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd frontend && npm install && npm run dev"],
+      "port": 5173
+    },
+    {
+      "name": "Backend (FastAPI)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "import subprocess, sys, os; os.chdir('backend'); subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt', '-q']); subprocess.run([sys.executable, 'run.py'])"],
+      "port": 8000
+    }
+  ]
+}

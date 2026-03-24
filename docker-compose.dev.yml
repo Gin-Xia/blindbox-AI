@@ -1,0 +1,21 @@
+# Local development override: mounts source code for hot-reload
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  backend:
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+      - model_cache:/root/.cache/huggingface
+    command: ["python", "run.py"]   # uvicorn with --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      target: builder          # stop at builder stage, don't run nginx
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules      # anonymous volume to avoid overwriting
+    ports:
+      - "5173:5173"
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
