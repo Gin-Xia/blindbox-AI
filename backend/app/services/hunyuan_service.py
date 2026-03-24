@@ -195,4 +195,8 @@ def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
         api_name="/shape_generation",
     )
     # result = (glb_filepath, html_output, mesh_stats, seed)
-    return save_glb(result[0], task_id)
+    # result[0] may be a plain path string or a gradio update dict {"value": path, "__type__": "update"}
+    glb_path = result[0]
+    if isinstance(glb_path, dict):
+        glb_path = glb_path.get("value") or glb_path.get("path") or glb_path.get("url")
+    return save_glb(glb_path, task_id)
