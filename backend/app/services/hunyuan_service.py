@@ -196,8 +196,14 @@ def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
     )
     result = job.result(timeout=900)  # 15 min — ZeroGPU queue + generation time
 
-    # result[0] may be a plain path string or a gradio update dict {"value": path, ...}
+    # result[0] may be a plain path string, a dict, or a string repr of a dict
+    import ast
     glb_path = result[0]
+    if isinstance(glb_path, str) and glb_path.startswith("{"):
+        try:
+            glb_path = ast.literal_eval(glb_path)
+        except Exception:
+            pass
     if isinstance(glb_path, dict):
         glb_path = glb_path.get("value") or glb_path.get("path") or glb_path.get("url")
     return save_glb(glb_path, task_id)
