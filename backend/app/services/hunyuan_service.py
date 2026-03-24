@@ -182,7 +182,7 @@ def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
 
     token  = os.getenv("HF_TOKEN") or None
     client = Client("tencent/Hunyuan3D-2", token=token)
-    result = client.predict(
+    job = client.submit(
         caption=prompt,
         image=handle_file(image_path),
         steps=30,
@@ -194,8 +194,9 @@ def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
         randomize_seed=False,
         api_name="/shape_generation",
     )
-    # result = (glb_filepath, html_output, mesh_stats, seed)
-    # result[0] may be a plain path string or a gradio update dict {"value": path, "__type__": "update"}
+    result = job.result(timeout=900)  # 15 min — ZeroGPU queue + generation time
+
+    # result[0] may be a plain path string or a gradio update dict {"value": path, ...}
     glb_path = result[0]
     if isinstance(glb_path, dict):
         glb_path = glb_path.get("value") or glb_path.get("path") or glb_path.get("url")
