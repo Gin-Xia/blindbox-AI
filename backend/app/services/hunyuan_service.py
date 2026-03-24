@@ -177,31 +177,42 @@ def _write_minimal_glb(path: Path):
 # ── Real implementation ────────────────────────────────────────────────────────
 
 def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
-    import os
+    import os, ast, time
     from gradio_client import Client, handle_file
 
-    token  = os.getenv("HF_TOKEN") or None
-    client = Client(
-        "tencent/Hunyuan3D-2",
-        token=token,
-        httpx_kwargs={"timeout": None},  # disable httpx read timeout — generation takes 5-15 min
-    )
-    job = client.submit(
-        caption=prompt,
-        image=handle_file(image_path),
-        steps=30,
-        guidance_scale=5.0,
-        seed=1234,
-        octree_resolution=256,
-        check_box_rembg=False,
-        num_chunks=8000,
-        randomize_seed=False,
-        api_name="/shape_generation",
-    )
-    result = job.result(timeout=900)  # 15 min — ZeroGPU queue + generation time
+    token = os.getenv("HF_TOKEN") or None
+
+    for attempt in range(1, 6):  # up to 5 attempts — ZeroGPU GPU may be busy
+        try:
+            print(f"[Hunyuan3D] attempt {attempt}/5 ...")
+            client = Client(
+                "tencent/Hunyuan3D-2",
+                token=token,
+                httpx_kwargs={"timeout": None},
+            )
+            job = client.submit(
+                caption=prompt,
+                image=handle_file(image_path),
+                steps=30,
+                guidance_scale=5.0,
+                seed=1234,
+                octree_resolution=256,
+                check_box_rembg=False,
+                num_chunks=8000,
+                randomize_seed=False,
+                api_name="/shape_generation",
+            )
+            result = job.result(timeout=900)
+            break
+        except Exception as e:
+            print(f"[Hunyuan3D] attempt {attempt} failed: {e}")
+            if attempt == 5:
+                raise RuntimeError(f"Hunyuan3D failed after 5 attempts: {e}")
+            wait = 30 * attempt  # 30s → 60s → 90s → 120s
+            print(f"[Hunyuan3D] retrying in {wait}s ...")
+            time.sleep(wait)
 
     # result[0] may be a plain path string, a dict, or a string repr of a dict
-    import ast
     glb_path = result[0]
     if isinstance(glb_path, str) and glb_path.startswith("{"):
         try:
