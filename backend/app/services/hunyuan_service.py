@@ -181,7 +181,11 @@ def _real_generate(image_path: str, prompt: str, task_id: str) -> Path:
     from gradio_client import Client, handle_file
 
     token  = os.getenv("HF_TOKEN") or None
-    client = Client("tencent/Hunyuan3D-2", token=token)
+    client = Client(
+        "tencent/Hunyuan3D-2",
+        token=token,
+        httpx_kwargs={"timeout": None},  # disable httpx read timeout — generation takes 5-15 min
+    )
     job = client.submit(
         caption=prompt,
         image=handle_file(image_path),
